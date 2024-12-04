@@ -1,282 +1,129 @@
 import sys
-import build_data
+import pickle
+import os
 
-fullData = build_data.get_data()
+def dataset_loaded(filePath):
+    try:
+        with open(filePath, 'rb') as f:
+            data = pickle.load(f)
+        return data
+    except FileNotFoundError:
+        print(f"Error: File '{filePath}' cannot be found.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error with loading data: {e}")
+        sys.exit(1)
 
-def percent(line, less):
-    perc = 0
-    program = line[1].split(".")
-    if program[0] == "Education":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    perc += county.education[program[1]]
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    perc += county.education[program[1]]
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    elif program[0] == "Ethnicities":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    perc += county.ethnicities[program[1]]
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    perc += county.ethnicities[program[1]]
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    elif program[0] == "Income":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    perc += county.income[program[1]]
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    perc += county.income[program[1]]
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    print(round(perc/len(fullData),2))
+def display(data):
+    for i in data:
+        print(i)
+    print(f"Total entries: {len(data)}")
 
-def totalPopulation(less):
-    pop = 0
-    if len(less) == 0:
-        for county in fullData:
-            pop += county.population["2014 Population"]
-    else:
-        for county in less:
-            pop += county.population["2014 Population"]
-    print(pop)
 
-def filterST(less):
-    filterCounties = []
-    for county in fullData:
-        if county.state == less[1]:
-            filterCounties.append(county)
-    print(len(filterCounties))
-    return filterCounties
+#The purpose of this function is to filter the counties through abbreviating them
+def filterST(data, stateAbbrev):
+    filt = [county for county in data if county.get("State") == stateAbbrev]
+    print(f"Filter: state == {stateAbbrev} ({len(filt)} entries)")
+    return filt
 
-def filterGT(line, less):
-    filterCounties = []
-    program = line[1].split(".")
-    if program[0] == "Education":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    if county.education[program[1]] > float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    if county.education[program[1]] > float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    elif program[0] == "Income":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    if county.income[program[1]] > float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    if county.income[program[1]] > float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    elif program[1] == "Ethnicities":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    if county.ethnicities[program[1]] > float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    if county.ethnicities[program[1]] > float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    print("Filter: {} Greater than {}: {}".format(program[0], line[2], len(filterCounties)))
-    return filterCounties
+#The purpose of this function is to filter the counties by greater field value
+def filterGT(data, field, val):
 
-def filterLT(line, less):
-    filterCounties = []
-    program = line[1].split(".")
-    if program[0] == "Education":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    if county.education[program[1]] < float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    if county.education[program[1]] < float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    elif program[0] == "Income":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    if county.income[program[1]] < float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    if county.income[program[1]] < float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    elif program[0] == "Ethnicities":
-        if len(less) == 0:
-            for county in fullData:
-                try:
-                    if county.ethnicities[program[1]] < float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-        else:
-            for county in less:
-                try:
-                    if county.ethnicities[program[1]] < float(line[2]):
-                        filterCounties.append(county)
-                except ValueError:
-                    print("Value {} can't be converted to a number".format(line[2]))
-                    return
-                except KeyError:
-                    print("Invalid Key")
-                    return
-    print("Filter: {} Less than {}: {}".format(program[0],line[2],len(filterCounties)))
-    return filterCounties
+    filt = [county for county in data if county.get(field, 0) > val]
+    print(f"Filter: {field} gt {val} ({len(filt)} entries)")
+    return filt
 
-def display(less):
-    if len(less) == 0:
-        for county in fullData:
-            print("County: {}\nState: {}\nPopulation: {}\n".format(county.county, county.state, county.population["2014 Population"]))
-    else:
-        for county in less:
-            print("County: {}\nState: {}\nPopulation: {}\n".format(county.county, county.state, county.population["2014 Population"]))
+#The purpose of this function is to filter the counties by less field value
+def filterLT(data, field, val):
+    filt = [county for county in data if county.get(field, 0) < val]
+    print(f"Filter: {field} lt {val} ({len(filt)} entries)")
+    return filt
 
-def population(line, less):
-    pop = 0
-    program = line[1].split(".")
-    if program[0] == "Ethnicities":
-        if len(less) == 0:
-            for county in fullData:
-                pop += round(county.ethnicities[program[1]] * county.population["2014 Population"])
-        else:
-            for county in less:
-                pop += round(county.ethnicities[program[1]] * county.population["2014 Population"])
-    elif program[0] == "Education":
-        if len(less) == 0:
-            for county in fullData:
-                pop += round(county.education[program[1]] * county.population["2014 Population"])
-        else:
-            for county in less:
-                pop += round(county.education[program[1]] * county.population["2014 Population"])
-    elif program[0] == "Income":
-        if len(less) == 0:
-            for county in fullData:
-                pop += round(county.income[program[1]] * county.population["2014 Population"])
-        else:
-            for county in less:
-                pop += round(county.income[program[1]] * county.population["2014 Population"])
-    print("Population of {}: {}".format(program[1],population))
+#The purpose of this function is to print every counties 2014 population
+def population_total(data):
+    total_pop = sum(county.get("2014 Population", 0) for county in data)
+    print(f"2014 population: {total_pop}")
 
-file = open(sys.argv[1])
-lessCounties = []
-for line in file:
-    line = line.split(":")
-    for x in range(len(line)):
-        if "\n" in line[x]:
-            line[x] = "".join(line[x][y] for y in range(len(line[x])-1))
-    if line[0] == "display":
-        display(lessCounties)
-    elif line[0] == "filterST":
-        lessCounties = filterST(line)
-    elif line[0] == "filterGT":
-        lessCounties = filterGT(line,lessCounties)
-    elif line[0] == "filterLT":
-        lessCounties = filterLT(line,lessCounties)
-    elif line[0] == "totalPopulation":
-        totalPopulation(line)
-    elif line[0] == "population":
-        population(lessCounties)
-    elif line[0] == "percent":
-        percent(line,lessCounties)
-    elif line[0] == "reset":
-        lessCounties = []
-    else:
-        print("Not a Command")
+#The purpose of this function is to print the total sup-population for a percentage-based field
+def populationField(data, field):
+    total = sum(
+        county.get("2014 Population", 0) * (county.get(field, 0) / 100)
+        for county in data
+    )
+    print(f"2014 {field} population: {total}")
+
+#The purpose of this function is to print the percentage of the total population in a sup-population for a field
+def percentField(data, field):
+    total_pop = sum(county.get("2014 Population", 0) for county in data)
+    if total_pop == 0:
+        print(f"2014 {field} percentage: 0")
+        return
+    sub_pop = sum(
+        county.get("2014 Population", 0) * (county.get(field, 0) / 100)
+        for county in data
+    )
+    perc = (sub_pop / total_pop) * 100
+    print(f"2014 {field} percentage: {perc}")
+
+#The purpose of this function is to read the operations file and execute commands
+def process_ops(file_path, data):
+    try:
+        with open(file_path, 'r') as f:
+            operations = f.readlines()
+    except FileNotFoundError:
+        print(f"Error: Cannot find operations file '{file_path}'.")
+        sys.exit(1)
+
+    for lineNum, line in enumerate(operations, 1):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        try:
+            parts = line.split(":")
+            command = parts[0]
+
+            if command == "display":
+                display(data)
+            elif command == "filter-state":
+                stateAbbrev = parts[1]
+                data = filterST(data, stateAbbrev)
+            elif command == "filter-gt":
+                field, val = parts[1], float(parts[2])
+                data = filterGT(data, field, val)
+            elif command == "filter-lt":
+                field, val = parts[1], float(parts[2])
+                data = filterLT(data, field, val)
+            elif command == "population-total":
+                population_total(data)
+            elif command == "population":
+                field = parts[1]
+                populationField(data, field)
+            elif command == "percent":
+                field = parts[1]
+                percentField(data, field)
+            else:
+                print(f"Error: Line {lineNum}: {line} with unknown command")
+        except (IndexError, ValueError) as e:
+            print(f"Error: Line {lineNum}: {line} ({e}) with malformed operation")
+            continue
+
+#The purpose of this function is to check for command-line arguments
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python hw4.py <operations_file>")
+        sys.exit(1)
+
+    dataset_path = "county_demographics.data"
+    if not os.path.exists(dataset_path):
+        print(f"Error: Cannot find dataset file '{dataset_path}'.")
+        sys.exit(1)
+
+    data = dataset_loaded(dataset_path)
+    print(f"Number of entries: {len(data)}")
+
+    ops_file = sys.argv[1]
+    process_ops(ops_file, data)
+
+if __name__ == "__main__":
+    main()
